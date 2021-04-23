@@ -54,7 +54,7 @@ class Geb {
  */
 fun main(){
     val geb = Geb()
-    val reading = geb.getReadingForWeek(11)
+    val reading = geb.getReadingForWeek(14)
     val formattedOutput = ReadingPrinter.printReading(reading)
     println(formattedOutput)
 }
