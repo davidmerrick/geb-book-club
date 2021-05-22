@@ -6,6 +6,7 @@ import java.io.File
 private const val WEEK_COLUMN = "week"
 private const val START_PAGE_COLUMN = "start_page"
 private const val CHAPTER_COLUMN = "chapter_name"
+private const val LAST_PAGE = 746
 
 class Geb {
 
@@ -18,7 +19,7 @@ class Geb {
         // Get available weeks
         val weekNums = rows.map { it[WEEK_COLUMN]!!.toInt() }.toSet()
 
-        reading = (weekNums.minOrNull()!! until weekNums.maxOrNull()!!).associateWith {
+        reading = weekNums.sorted().associateWith {
             WeekReading(
                 getChapters(rows, it),
                 getStartPage(rows, it),
@@ -27,9 +28,20 @@ class Geb {
         }
     }
 
+    private fun getNextWeekNum(rows: List<Map<String, String>>, weekNum: Int): Int {
+        return rows.filter { it[WEEK_COLUMN]!!.toInt() > weekNum }
+            .sortedBy { it[WEEK_COLUMN]!!.toInt() }
+            .minByOrNull { it[WEEK_COLUMN]!!.toInt() }!![WEEK_COLUMN]!!.toInt()
+    }
+
     private fun getEndPage(rows: List<Map<String, String>>, weekNum: Int): Int {
+        if(weekNum == rows.maxByOrNull { it[WEEK_COLUMN]!!.toInt() }!![WEEK_COLUMN]!!.toInt()){
+            return LAST_PAGE
+        }
+
         // end page of current week is start page of next - 1
-        return getStartPage(rows, weekNum + 1) - 1
+        val nextWeekNum = getNextWeekNum(rows, weekNum)
+        return getStartPage(rows, nextWeekNum) - 1
     }
 
     private fun getStartPage(rows: List<Map<String, String>>, weekNum: Int): Int {
@@ -52,7 +64,7 @@ class Geb {
 /**
  * Outputs the reading, given what week it is
  */
-fun main(){
+fun main() {
     val geb = Geb()
     val reading = geb.getReadingForWeek(18)
     val formattedOutput = ReadingPrinter.printReading(reading)
